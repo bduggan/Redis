@@ -1,46 +1,62 @@
-# Redis - Perl6 binding for Redis
+[![Actions Status](https://github.com/raku-community-modules/Redis/actions/workflows/linux.yml/badge.svg)](https://github.com/raku-community-modules/Redis/actions) [![Actions Status](https://github.com/raku-community-modules/Redis/actions/workflows/macos.yml/badge.svg)](https://github.com/raku-community-modules/Redis/actions)
 
-[![Build Status](https://travis-ci.com/cofyc/perl6-redis.svg?branch=master)](https://travis-ci.com/cofyc/perl6-redis)
-
-Synopsis
-========
-
-    my $redis = Redis.new("127.0.0.1:6379");
-    $redis.set("key", "value");
-    say $redis.get("key");
-    say $redis.info();
-    $redis.quit();
-
-Build & Test & Install
-======================
-
-Testing this will require redis-server to be installed on your machine.
-The tests will start their own version of the redis server on a different
-port so as not to interfere with a running server.  If no redis-server
-can be found on your machine the tests will be skipped so you will still
-be able to install this module.
-
-Assuming you have a working rakudo perl 6 installation then you should be
-able to install this with zef:
-
-    zef install Redis
-
-or if you have a local copy of the library:
-
-    zef install .
-
-Unit Tests
-==========
-
-    Tested agaist Redis version 2.4.16, 2.5.12 and 4.0.9
-
-Docs
+NAME
 ====
 
-    $ p6doc Redis
+Redis - a Raku binding for Redis
 
-References
-==========
+SYNOPSIS
+========
 
-1. http://redis.io/topics/protocol
-2. http://search.cpan.org/~melo/Redis-1.951/
+```raku
+use Redis;
+
+my $redis = Redis.new("127.0.0.1:6379");
+$redis.set("key", "value");
+say $redis.get("key");
+say $redis.info;
+$redis.quit;
+```
+
+DESCRIPTION
+===========
+
+Redis provides a Raku interface to the [Redis](https://en.wikipedia.org/wiki/Redis) server.
+
+METHODS
+=======
+
+new
+---
+
+```raku
+method new(Str $server?, Str :$encoding?, Bool :$decode_response?)
+```
+
+Returns the redis object.
+
+exec_command
+------------
+
+```raku
+method exec_command(Str $command, *@args) returns Any
+```
+
+Executes arbitrary command.
+
+AUTHORs
+=======
+
+  * Yecheng Fu
+
+  * Raku Community
+
+COPYRIGHT AND LICENSE
+=====================
+
+Copyright 2012 - 2018 Yecheng Fu
+
+Copyright 2024 Raku Community
+
+This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
+

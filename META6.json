@@ -1,19 +1,27 @@
 {
-  "name": "Redis",
-  "source-url": "git://github.com/Cofyc/perl6-redis.git",
-  "perl": "6.*",
-  "source-type": "git",
-  "author": "Yecheng Fu",
+  "auth": "zef:raku-community-modules",
+  "authors": [
+    "Yecheng Fu",
+    "Raku Community"
+  ],
+  "build-depends": [
+  ],
   "depends": [
-    
   ],
-  "test-depends" : [
-      "File::Which"
-  ],
+  "description": "a Raku binding for Redis",
   "license": "Artistic-2.0",
+  "name": "Redis",
+  "perl": "6.d",
   "provides": {
-    "Redis": "lib/Redis.pm"
+    "Redis": "lib/Redis.rakumod"
   },
-  "version": "0.1.1",
-  "description": "A Perl6 binding for Redis"
+  "resources": [
+  ],
+  "source-url": "https://github.com/raku-community-modules/Redis.git",
+  "tags": [
+  ],
+  "test-depends": [
+    "File::Which"
+  ],
+  "version": "0.1.2"
 }

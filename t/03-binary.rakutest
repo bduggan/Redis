@@ -1,17 +1,14 @@
-use v6;
-
-use lib <t lib>;
-use Redis;
 use Test;
+use Redis;
 
+use lib "t";
 use Test::SpawnRedisServer;
 
 plan 2;
 
 if SpawnRedis() -> $proc {
-    LEAVE {
-        $proc.kill('INT');
-    }
+    LEAVE $proc.kill('INT');
+
     my $r = Redis.new("127.0.0.1:63790");
     $r.auth('20bdfc8e73365b2fde82d7b17c3e429a9a94c5c9');
     $r.flushall;
@@ -25,3 +22,5 @@ if SpawnRedis() -> $proc {
 else {
     skip-rest "no redis-server";
 }
+
+# vim: expandtab shiftwidth=4

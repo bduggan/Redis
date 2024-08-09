@@ -1,15 +1,12 @@
-use v6;
-
-use lib <t lib>;
-use Redis;
 use Test;
+use Redis;
 
+use lib "t";
 use Test::SpawnRedisServer;
 
 if SpawnRedis() -> $proc {
-    LEAVE {
-        $proc.kill('INT');
-    }
+    LEAVE $proc.kill('INT');
+
     my $r = Redis.new("127.0.0.1:63790", decode_response => True);
     $r.auth('20bdfc8e73365b2fde82d7b17c3e429a9a94c5c9');
     $r.flushall;
@@ -49,7 +46,8 @@ if SpawnRedis() -> $proc {
         is $r.ttl("key"), $r.info<redis_version> ge "2.8" ?? -2 !! -1;
         is-deeply $r.pexpireat("key", 1), False;
         is $r.pttl("key"), $r.info<redis_version> ge "2.8" ?? -2 !! -1;
-    } else {
+    }
+    else {
         is-deeply $r.expire("key", 100), True;
         ok $r.ttl("key") <= 100;
         ok $r.persist("key");
@@ -91,4 +89,4 @@ else {
     skip-rest "no redis-server";
 }
 
-# vim: ft=perl6
+# vim: expandtab shiftwidth=4
