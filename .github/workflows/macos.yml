@@ -22,8 +22,6 @@ jobs:
       - uses: Raku/setup-raku@v1
         with:
           raku-version: ${{ matrix.raku-version }}
-      - name: Install Redis
-        run: brew install Redis
       - name: Install dependencies
         run: zef install . --deps-only --/test
       - name: Run Special Tests
