@@ -7,6 +7,7 @@
   "build-depends": [
   ],
   "depends": [
+    "File::Which"
   ],
   "description": "a Raku binding for Redis",
   "license": "Artistic-2.0",
@@ -18,10 +19,9 @@
   "resources": [
   ],
   "source-url": "https://github.com/raku-community-modules/Redis.git",
-  "tags": [
+  "tags": [ "REDIS", "NOSQL"
   ],
   "test-depends": [
-    "File::Which"
   ],
   "version": "0.1.2"
 }
