@@ -1,65 +1,3 @@
-=begin pod
-
-=head1 NAME
-
-Redis - a Raku binding for Redis
-
-=head1 SYNOPSIS
-
-=begin code :lang<raku>
-
-use Redis;
-
-my $redis = Redis.new("127.0.0.1:6379");
-$redis.set("key", "value");
-say $redis.get("key");
-say $redis.info;
-$redis.quit;
-
-=end code
-
-=head1 DESCRIPTION
-
-Redis provides a Raku interface to the
-L<Redis|https://en.wikipedia.org/wiki/Redis> server.
-
-=head1 METHODS
-
-=head2 new
-
-=begin code :lang<raku>
-
-method new(Str $server?, Str :$encoding?, Bool :$decode_response?)
-
-=end code
-
-Returns the redis object.
-
-=head2 exec_command
-
-=begin code :lang<raku>
-
-method exec_command(Str $command, *@args) returns Any
-
-=end code
-
-Executes arbitrary command.
-
-=head1 AUTHORs
-
-=item Yecheng Fu
-=item Raku Community
-
-=head1 COPYRIGHT AND LICENSE
-
-Copyright 2012 - 2018 Yecheng Fu
-
-Copyright 2024 Raku Community
-
-This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
-
-=end pod
-
 unit class Redis;
 
 has Str $.host = '127.0.0.1';
@@ -77,62 +15,63 @@ my &status_code_reply_cb = { $_ eq "OK" };
 my &integer_reply_cb = { $_.Bool };
 my &buf_to_float_cb = { $_.decode("ASCII").Real };
 
-my %command_callbacks = Hash.new;
+my %command_callbacks;
 %command_callbacks{"PING"} = { $_ eq "PONG" };
-for "CLIENT KILL,BGSAVE,BGREWRITEAOF,AUTH,QUIT,SET,MSET,PSETEX,SETEX,MIGRATE,RENAME,RENAMENX,RESTORE,HMSET,SELECT,LSET,LTRIM,FLUSHALL,FLUSHDB,DISCARD,MULTI,WATCH,UNWATCH,SCRIPT FLUSH,SCRIPT KILL".split(",") -> $c {
-    %command_callbacks{$c} = &status_code_reply_cb;
+for <<
+  "CLIENT KILL" BGSAVE BGREWRITEAOF AUTH QUIT SET MSET PSETEX SETEX MIGRATE
+  RENAME RENAMENX RESTORE HMSET SELECT LSET LTRIM FLUSHALL FLUSHDB DISCARD
+  MULTI WATCH UNWATCH "SCRIPT FLUSH" SCRIPT KILL
+>> -> $c {
+    %command_callbacks{$c} := &status_code_reply_cb;
 }
-for "EXISTS SETNX EXPIRE EXPIREAT MOVE PERSIST PEXPIRE PEXPIREAT HSET HEXISTS HSETNX SISMEMBER SMOVE".split(" ") -> $c {
-    %command_callbacks{$c} = &integer_reply_cb;
+for <
+  EXISTS SETNX EXPIRE EXPIREAT MOVE PERSIST PEXPIRE PEXPIREAT HSET HEXISTS
+  HSETNX SISMEMBER SMOVE
+> -> $c {
+    %command_callbacks{$c} := &integer_reply_cb;
 }
-for "INCRBYFLOAT HINCRBYFLOAT ZINCRBY ZSCORE".split(" ") -> $c {
-    %command_callbacks{$c} = &buf_to_float_cb;
+for <INCRBYFLOAT HINCRBYFLOAT ZINCRBY ZSCORE> -> $c {
+    %command_callbacks{$c} := &buf_to_float_cb;
 }
 # TODO so ugly...
 # @see hash key is Str in ISO-8859-1 encoding
-%command_callbacks{"HGETALL"} = sub (@list --> Hash:D) {
-    my %h = Hash.new;
-    for @list.pairs -> $p {
-        if $p.key % 2 eq 0 {
-            %h{$p.value.decode("ISO-8859-1")} = @list[$p.key + 1];
-        }
+%command_callbacks<HGETALL> = -> @list --> Hash:D {
+    my %h;
+    for @list.kv -> $i, $key {
+        %h{$key.decode("ISO-8859-1")} := @list[$i + 1] if $i %% 2;
     }
     %h
-};
+}
 
-%command_callbacks{"INFO"} = sub ($info --> Hash:D) {
+%command_callbacks{"INFO"} := -> $info --> Hash:D {
     my @lines = $info.decode.split("\r\n");
     my %info;
     for @lines -> $l {
-        if $l.substr(0, 1) eq "#" {
-            next;
+        if $l.substr(0, 1) ne "#" {
+            my ($key, $value) = $l.split(":");
+            %info{$key} = $value;
         }
-        my ($key, $value) = $l.split(":");
-        %info{$key} = $value;
     }
     %info
-};
+}
 
 has %!command_callbacks = %command_callbacks;
 
 method new(Str $server?, Str :$encoding?, Bool :$decode_response?) {
-    my %config := {}
+    my %config;
     if $server.defined {
         if $server ~~ m/^([\d+]+ %\.) [':' (\d+)]?$/ {
             %config<host> = $0.Str;
             if $1 {
                 %config<port> = $1.Str.Int;
             }
-        } else {
+        }
+        else {
             %config<sock> = $server;
         }
     }
-    if $encoding.defined {
-        %config<encoding> = $encoding;
-    }
-    if $decode_response.defined {
-        %config<decode_response> = $decode_response;
-    }
+    %config<encoding>        = $_ with $encoding;
+    %config<decode_response> = $_ with $decode_response;
 
     my $obj = self.bless(|%config);
     $obj.reconnect;
@@ -184,13 +123,13 @@ method exec_command(Str $command, *@args) {
 }
 
 my sub find-first-line-end(Blob $input --> Int:D) {
-    my $i = 0;
+    my int $i;
     my $input-bytes = $input.bytes;
     while $i + 2 <= $input-bytes  {
         if $input[$i] == 0x0d && $input[$i+1]==0x0a {
             return $i;
         }
-        $i++
+        ++$i;
     }
     $input-bytes
 }
@@ -230,7 +169,7 @@ method !read_response(Blob:D $remainder is rw) {
     elsif $flag eq '$' {
         # bulk response
         my $length = $response.Int;
-        if $length eq -1 {
+        if $length == -1 {
             return Nil;
         }
         my $needed = $length - $remainder.bytes;
@@ -247,7 +186,7 @@ method !read_response(Blob:D $remainder is rw) {
     elsif $flag eq '*' {
         # multi-bulk response
         my $length = $response.Int;
-        if $length eq -1 {
+        if $length == -1 {
             return Nil;
         }
         $response = [];
