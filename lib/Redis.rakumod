@@ -743,7 +743,7 @@ method srandmember(Str:D $key) {
 }
 
 method srem(Str:D $key, *@members --> Int:D) {
-    self.exec_command("SREM", |@members)
+    self.exec_command("SREM", $key, |@members)
 }
 
 method sunion(*@keys --> List:D) {
