@@ -4,7 +4,7 @@ use Redis;
 use lib "t";
 use Test::SpawnRedisServer;
 
-plan 15;
+plan 17;
 
 if SpawnRedis() -> $proc {
     LEAVE $proc.kill('INT');
@@ -12,7 +12,8 @@ if SpawnRedis() -> $proc {
     my $r = Redis.new("127.0.0.1:63790", decode_response => True);
     $r.auth('20bdfc8e73365b2fde82d7b17c3e429a9a94c5c9');
     $r.flushall;
-
+    ok $r.sadd('abcd',1 );
+    ok $r.srem('abcd',"1" );
 
     is-deeply $r.sadd("set1", 1, 2, 3, 4), 4;
     is-deeply $r.scard("set1"), 4;
@@ -35,7 +36,7 @@ if SpawnRedis() -> $proc {
     ok $r.srandmember("set_diff") eq any("1", "2", "3");
 
     # srem
-    is-deeply $r.srem("set_inter", "3", "4"), 0;
+    is-deeply $r.srem("set_inter", "3", "4"), 1;
 
     # sunion & sunionstore
     is-deeply $r.sunion("set1", "set2"), ["1", "2", "3", "4"];
