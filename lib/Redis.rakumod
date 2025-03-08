@@ -9,6 +9,7 @@ has Str $.encoding = "UTF-8"; # Use this encoding to decode Str
 # which, must return Buf
 has Bool $.decode_response = False;
 has $.conn is rw;
+has $.command-lock = Lock.new;
 
 # Predefined callbacks
 my &status_code_reply_cb = { $_ eq "OK" };
@@ -115,11 +116,13 @@ method !pack_command(*@args --> Buf:D) {
 }
 
 method exec_command(Str $command, *@args) {
-    @args.prepend($command.split(" "));
-    $.conn.write(self!pack_command(|@args));
-    my $remainder = Buf.new;
+    $!command-lock.protect: {
+        @args.prepend($command.split(" "));
+        $.conn.write(self!pack_command(|@args));
+        my $remainder = Buf.new;
 
-    self!parse_response(self!read_response($remainder), $command);
+        self!parse_response(self!read_response($remainder), $command);
+    }
 }
 
 my sub find-first-line-end(Blob $input --> Int:D) {
