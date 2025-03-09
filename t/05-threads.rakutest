@@ -19,6 +19,8 @@ if SpawnRedis() -> $proc {
     for 1..200 {
         is $r.get("key-$_"), "val-$_"
     }
+} else {
+    skip-rest "no redis-server"
 }
 
 # vim: expandtab shiftwidth=4
