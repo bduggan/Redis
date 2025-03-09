@@ -1,0 +1,22 @@
+use Test;
+use Redis;
+
+use lib "t";
+use Test::SpawnRedisServer;
+
+if SpawnRedis() -> $proc {
+    LEAVE $proc.kill('INT');
+
+    my $r = Redis.new("127.0.0.1:63790", decode_response => True);
+    $r.auth('20bdfc8e73365b2fde82d7b17c3e429a9a94c5c9');
+    $r.flushall;
+    
+    race for (1..200).race(degree => 50, batch => 1) {
+        ok $r.set("key-$_","val-$_"), "set value in thread " ~ $*THREAD.id;
+    }
+    for 1..200 {
+        is $r.get("key-$_"), "val-$_"
+    }
+}
+
+# vim: expandtab shiftwidth=4
