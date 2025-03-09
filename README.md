@@ -1,3 +1,5 @@
+-[![Actions Status](https://github.com/raku-community-modules/Redis/actions/workflows/linux.yml/badge.svg)](https://github.com/raku-community-modules/Redis/actions) [![Actions Status](https://github.com/raku-community-modules/Redis/actions/workflows/macos.yml/badge.svg)](https://github.com/raku-community-modules/Redis/actions)
+
 NAME
 ====
 
