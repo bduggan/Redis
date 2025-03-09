@@ -4,6 +4,8 @@ use Redis;
 use lib "t";
 use Test::SpawnRedisServer;
 
+plan 400;
+
 if SpawnRedis() -> $proc {
     LEAVE $proc.kill('INT');
 
